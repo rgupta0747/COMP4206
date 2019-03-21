@@ -116,9 +116,25 @@ def addAgentsToMatrix(matrix, agents):
 def displayGrid(matrix):
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
-            if (isinstance(matrix[y][x], int)): print("-", end=" ")
+            if (isinstance(matrix[y][x], int)): print("- ", end=" ")
             else: print(matrix[y][x], end=" ")
         print()
+
+#This sets the new location of each agent in the agent list based on the direction provided
+def setNewLocations(direction, agents, rows, cols):
+    for i in range(len(agents)):
+        agentLocation = agents[i].getLocation()
+        newX = agentLocation[0]
+        newY = agentLocation[1]
+        if (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
+            newX = movesLeftRight(newX, direction, rows)
+        else:
+            newY = movesUpDown(newY, direction, cols)                                       #otherwise move up/down if possible
+        agents[i].setAgentLocation(newX, newY)                                              #once new x and y values obtained, set the new agent location
+#        print("Agent " + agents[i].getAgentId() + " is at: ", end=" ")
+#        print(agents[i].getLocation())
+    return agents
+
 
 def main():
     rows = columns = 10                                                                         #sets the rows and columns
@@ -126,38 +142,25 @@ def main():
     matrix = createMatrix(rows, columns)                                                        #creates the grid
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
     agentList = []
+    print()
+    print("This is where the agents are initially located")
+    print()
     for x in range(len(agentIDList)):                                                           #go through agent id's and create agents
         agentList.append(SusceptibleAgent())
         agentList[x].setAgentId(agentIDList[x])                                                 #set id of agent to the agent id from list
         agentList[x].setAgentLocation(generateRandomX(rows),generateRandomY(columns))           #set the location of each agent randomly
-    print()
-    print("This is where the agents are initially located")
-    print()
-    for agentNum in range(len(agentList)):
-        print("Agent " + agentList[agentNum].getAgentId() + " is at: ", end=" ")                #prints the agent id and their location
-        print(agentList[agentNum].getLocation())
-    print()
-    print("This is the location of agents on the grid initially")
+#        print("Agent " + agentList[x].getAgentId() + " is at: ", end=" ")                       #prints the agent id and their location
+#        print(agentList[x].getLocation())
     print()
     matrix = addAgentsToMatrix(matrix, agentList)
     displayGrid(matrix)                                                                          #prints the matrix with agents on the matrix
     time.sleep(2)
     print()
-    for i in range(10):                                                                          #This is the loop that would simulate agents moving
-        print("This is the location of agents after " + str(i) + " iteration")
+    for i in range(3):                                                                          #This is the loop that would simulate agents moving
+        print("This is the location of agents after " + str(i+1) + " iteration")
         print()
-        for y in range(len(agentList)):                                                         #this loop gets random direction to move agent and sets loc.
-            agentLocation = agentList[y].getLocation()
-            direction = whichWayToMove()
-            newX = agentLocation[0]
-            newY = agentLocation[1]
-            if (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
-                newX = movesLeftRight(newX, direction, rows)
-            else:
-                newY = movesUpDown(newY, direction, columns)                                    #otherwise move up/down if possible
-            print("Agent " + agentList[y].getAgentId() + " is at: ", end=" ")
-            print(agentList[y].getLocation())
-            agentList[y].setAgentLocation(newX, newY)                                           #replace original location with new location
+        direction = whichWayToMove()
+        agentList = setNewLocations(direction, agentList, rows, columns)
         print()
         matrix = createMatrix(rows, columns)                                                    #reinitialize the grid (a.k.a clear the matrix)
         matrix = addAgentsToMatrix(matrix, agentList)                                           #add agents new positions to the grid
