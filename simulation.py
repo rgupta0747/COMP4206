@@ -7,7 +7,7 @@ def createMatrix(row, col):
     matrix = [[0 for x in range(row)] for y in range(col)]
     for x in range(row):
         for y in range(col):
-            matrix[y][x] = number
+            matrix[x][y] = number
             number+=1
     return matrix
 
@@ -61,76 +61,104 @@ def getY(location):
 
 #determines the direction the agent will move
 def whichWayToMove():
-    direction = random.randint(1,4)
+    direction = random.randint(1,5)
     if (direction == 1): return "north"
     if (direction == 2): return "east"
     if (direction == 3): return "south"
     if (direction == 4): return "west"
+    if (direction == 5): return "stays"
 
 
 #generates movement of the agent from left to right on the grid based on a given direction
-def movesLeftRight(x, direction, rows):
-    if (x == 0 and direction == "east"):
-        newXLocation = x+1
-    elif (x == 0 and direction == "west"):
-        newXLocation = x
-    elif (x == rows-1 and direction == "west"):
-        newXLocation = x-1
-    elif (x == rows-1 and direction == "east"):
-        newXLocation = x
+def movesLeftRight(y, direction, cols):
+    if (y == 0 and direction == "east"):
+        newYLocation = y+1
+    elif (y == 0 and direction == "west"):
+        newYLocation = y
+    elif (y == cols-1 and direction == "west"):
+        newYLocation = y-1
+    elif (y == cols-1 and direction == "east"):
+        newYLocation = y
+    elif (direction == "stays"): newYLocation = y
     else:
         if (direction == "east"):
-            newXLocation = x+1
-        else:
-            newXLocation = x-1
-    return newXLocation
-
-#this moves the agent up or down based on a provided direction
-def movesUpDown(y, direction, cols):
-    if (y == 0 and direction == "south"):
-        newYLocation = y+1
-    elif (y == 0 and direction == "north"):
-        newYLocation = y
-    elif (y == cols-1 and direction == "north"):
-        newYLocation = y-1
-    elif (y == cols-1 and direction == "south"):
-        newYLocation = y
-    else:
-        if (direction == "south"):
             newYLocation = y+1
         else:
             newYLocation = y-1
     return newYLocation
 
+#this moves the agent up or down based on a provided direction
+def movesUpDown(x, direction, rows):
+    if (x == 0 and direction == "south"):
+        newXLocation = x+1
+    elif (x == 0 and direction == "north"):
+        newXLocation = x
+    elif (x == rows-1 and direction == "north"):
+        newXLocation = x-1
+    elif (x == rows-1 and direction == "south"):
+        newXLocation = x
+    elif (direction == "stays"): newYLocation = x
+    else:
+        if (direction == "south"):
+            newXLocation = x+1
+        else:
+            newXLocation = x-1
+    return newXLocation
+
 #this adds the agent to the matrix
-def addAgentsToMatrix(matrix, agents):
+def addAgentsToMatrix(matrix, agent):
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
-            for z in range(len(agents)):
-                if (x == getX(agents[z].getLocation()) and y == getY(agents[z].getLocation())):
-                    matrix[y][x] = agents[z].getAgentId()
+                if (x == getX(agent.getLocation()) and y == getY(agent.getLocation())):
+                    matrix[x][y] = agent.getAgentId()
     return matrix
 
 
+def locationSame(agents):
+    sameLocation = None
+    collisions = []
+    if (len(agents) > 1):
+        for x in range(0, len(agents)):
+            compLocation = agents[x]
+            for y in range (x+1, len(agents)):
+                if(compLocation.getLocation() == agents[y].getLocation()):
+                    sameLocation = agents[y]
+                    collisions.append((compLocation, sameLocation))
+                else:
+                    continue;
+    return collisions
+
 #This prints out the matrix with the agents's id displayed on the matrix
-def displayGrid(matrix):
+def displayGrid(matrix, agentList):
+    listOfSameLocations = locationSame(agentList)
+    for x in range(len(listOfSameLocations)):
+        locationX = getX(listOfSameLocations[x][0].getLocation())
+        locationY = getY(listOfSameLocations[x][0].getLocation())
+        matrix[locationX][locationY] = "! "
+        print("Agent" + listOfSameLocations[x][0].getAgentId() + " collided with Agent " + listOfSameLocations[x][1].getAgentId())
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
-            if (isinstance(matrix[y][x], int)): print("- ", end=" ")
-            else: print(matrix[y][x], end=" ")
+            if (isinstance(matrix[x][y], int)):
+                print("- ", end=" ")
+            if (isinstance(matrix[x][y], str)): print(matrix[x][y], end=" ")
         print()
 
 #This sets the new location of each agent in the agent list based on the direction provided
 def setNewLocations(direction, agents, rows, cols):
     for i in range(len(agents)):
         agentLocation = agents[i].getLocation()
-        newX = agentLocation[0]
-        newY = agentLocation[1]
-        if (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
-            newX = movesLeftRight(newX, direction, rows)
+        oldX = agentLocation[0]
+        oldY = agentLocation[1]
+        #otherwise move up/down if possible
+        #once new x and y values obtained, set the new agent location
+        if (direction == "stays"):
+            continue
+        elif (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
+            newY = movesLeftRight(oldY, direction, cols)
+            agents[i].setAgentLocation(oldX, newY)
         else:
-            newY = movesUpDown(newY, direction, cols)                                       #otherwise move up/down if possible
-        agents[i].setAgentLocation(newX, newY)                                              #once new x and y values obtained, set the new agent location
+            newX = movesUpDown(oldX, direction, rows)
+            agents[i].setAgentLocation(newX, oldY)
 #        print("Agent " + agents[i].getAgentId() + " is at: ", end=" ")
 #        print(agents[i].getLocation())
     return agents
@@ -143,30 +171,35 @@ def main():
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
     agentList = []
     print()
-    print("This is where the agents are initially located")
+#    print("This is where the agents are initially located")
     print()
     for x in range(len(agentIDList)):                                                           #go through agent id's and create agents
         agentList.append(SusceptibleAgent())
         agentList[x].setAgentId(agentIDList[x])                                                 #set id of agent to the agent id from list
-        agentList[x].setAgentLocation(generateRandomX(rows),generateRandomY(columns))           #set the location of each agent randomly
-#        print("Agent " + agentList[x].getAgentId() + " is at: ", end=" ")                       #prints the agent id and their location
-#        print(agentList[x].getLocation())
+        agentList[x].setAgentLocation(generateRandomX(rows), generateRandomY(columns))          #set the location of each agent randomly'
+        print(agentList[x].getAgentId() + " is at location " + "(" + str(getX(agentList[x].getLocation())) + ", " + str(getY(agentList[x].getLocation())) + ")")
     print()
-    matrix = addAgentsToMatrix(matrix, agentList)
-    displayGrid(matrix)                                                                          #prints the matrix with agents on the matrix
-    time.sleep(2)
+    for x in range(len(agentList)):
+        matrix = addAgentsToMatrix(matrix, agentList[x])
+    displayGrid(matrix, agentList)                                                                          #prints the matrix with agents on the matrix
     print()
-    for i in range(3):                                                                          #This is the loop that would simulate agents moving
+
+    for i in range(10):                                                                          #This is the loop that would simulate agents moving
         print("This is the location of agents after " + str(i+1) + " iteration")
         print()
         direction = whichWayToMove()
         agentList = setNewLocations(direction, agentList, rows, columns)
         print()
-        matrix = createMatrix(rows, columns)                                                    #reinitialize the grid (a.k.a clear the matrix)
-        matrix = addAgentsToMatrix(matrix, agentList)                                           #add agents new positions to the grid
-        displayGrid(matrix)                                                                     #print new grid
+        for x in range(len(agentList)):
+            print("Agent " + agentList[x].getAgentId() + " is at: ", end=" ")                       #prints the agent id and their location
+            print(agentList[x].getLocation())
         print()
-        time.sleep(2)
+        matrix = createMatrix(rows, columns)                                                    #reinitialize the grid (a.k.a clear the matrix)
+        for x in range(len(agentList)):
+            matrix = addAgentsToMatrix(matrix, agentList[x])                                           #add agents new positions to the grid
+        displayGrid(matrix, agentList)                                                                     #print new grid
+        print()
+        time.sleep(1)
 
 #    agent = whichAgentisInfected(agent1, agent2)
 #    if (agent == "agent2"):
