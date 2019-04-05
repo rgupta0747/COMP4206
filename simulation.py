@@ -17,24 +17,14 @@ def isSick(agent):
         return True
     return False
 
-#creates an edge between an infected and susceptible agent only if
-#one agent is sick and the other is susceptible and they are at the
-#same locations. The function adds to edge to the current list of edges
-def createAnEdge(agent1, agent2, listOfEdges):
-    if (agent1.getLocation() == agent2.getLocation()):
-        if (isSick(agent1) & isSick(agent2) == False):
-            listOfEdges.append(agent1,agent2)
-        if(isSick(agent2) & isSick(agent1) == False):
-            listOfedges.append(agent2,agent1)
-    return listOfEdges
 
 #determines which agent is sick and returns the agent that is sick
-#the susceptible agent becomes infected.
 def whichAgentisInfected(agent1, agent2):
     if (isSick(agent1)):
-        return "agent2"
-    elif (isSick(agent2)):
         return "agent1"
+    elif (isSick(agent2)):
+        return "agent2"
+    else: return "none"
 
 #creates a list of id's for all the agents in the simulation
 def createAgentID(size):
@@ -113,7 +103,7 @@ def addAgentsToMatrix(matrix, agent):
                     matrix[x][y] = agent.getAgentId()
     return matrix
 
-
+#checks if the two agents are at the same location and adds them to a list as a tuple
 def locationSame(agents):
     sameLocation = None
     collisions = []
@@ -129,85 +119,148 @@ def locationSame(agents):
     return collisions
 
 #This prints out the matrix with the agents's id displayed on the matrix
+#First it determines where the collisions occur and replaces the locations
+#in the matrix that collided with !
+#Then it goes through the matrix and if their is no id at the location, prints -
+#If there is an ID, then it determines if that id is healthy or sick and prints the
+#id or id with an * if it is sick.
+#Print is done to ensure spacing is satisfied.
 def displayGrid(matrix, agentList):
     listOfSameLocations = locationSame(agentList)
     for x in range(len(listOfSameLocations)):
         locationX = getX(listOfSameLocations[x][0].getLocation())
         locationY = getY(listOfSameLocations[x][0].getLocation())
-        matrix[locationX][locationY] = "! "
-        print("Agent" + listOfSameLocations[x][0].getAgentId() + " collided with Agent " + listOfSameLocations[x][1].getAgentId())
+        matrix[locationX][locationY] = "!  "
+        print("Agent " + listOfSameLocations[x][0].getAgentId() + " collided with Agent " + listOfSameLocations[x][1].getAgentId() + " at location (" + str(getX(listOfSameLocations[x][0].getLocation())) + ", " + str(getY(listOfSameLocations[x][0].getLocation()))+ ")")
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
             if (isinstance(matrix[x][y], int)):
-                print("- ", end=" ")
-            if (isinstance(matrix[x][y], str)): print(matrix[x][y], end=" ")
+                print("- ", end="  ")
+            if (isinstance(matrix[x][y], str)):
+                if (matrix[x][y] != "!  "):
+                    health = getHealth(matrix[x][y], agentList)
+                    counter = locationInList(matrix[x][y], agentList)
+                    if(health == "susceptible"):
+                        if (counter < 10): print(matrix[x][y], end="  ")
+                        else: print(matrix[x][y], end=" ")
+                    if(health == "infected"):
+                        if (counter < 10): print(matrix[x][y] + "*", end=" ")
+                        else: print(matrix[x][y] + "*", end="")
+                else: print(matrix[x][y], end=" ")
         print()
 
+#This checks the health of the agent ID in the agent list
+def getHealth(id, list):
+    for x in range(len(list)):
+        if (id == list[x].getAgentId()): return list[x].getHealth()
+
+#determines the index of the agent id in the list
+def locationInList(id, list):
+    for x in range(len(list)):
+        if (id == list[x].getAgentId()): return x
+
+
 #This sets the new location of each agent in the agent list based on the direction provided
-def setNewLocations(direction, agents, rows, cols):
-    for i in range(len(agents)):
-        agentLocation = agents[i].getLocation()
-        oldX = agentLocation[0]
-        oldY = agentLocation[1]
-        #otherwise move up/down if possible
-        #once new x and y values obtained, set the new agent location
-        if (direction == "stays"):
-            continue
-        elif (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
-            newY = movesLeftRight(oldY, direction, cols)
-            agents[i].setAgentLocation(oldX, newY)
-        else:
-            newX = movesUpDown(oldX, direction, rows)
-            agents[i].setAgentLocation(newX, oldY)
-#        print("Agent " + agents[i].getAgentId() + " is at: ", end=" ")
-#        print(agents[i].getLocation())
-    return agents
+def setNewLocations(direction, agent, rows, cols):
+    agentLocation = agent.getLocation()
+    oldX = agentLocation[0]
+    oldY = agentLocation[1]
+    #once x and y values obtained, set the new agent location
+    #if direction is stays don't move agent
+    if (direction == "stays"):
+        return agent
+    elif (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
+        newY = movesLeftRight(oldY, direction, cols)
+        agent.setAgentLocation(oldX, newY)
+    #otherwise move the agent north south
+    else:
+        newX = movesUpDown(oldX, direction, rows)
+        agent.setAgentLocation(newX, oldY)
+    return agent
 
 
+#creates an infected agent
+def createInfectedAgent(agent):
+    originalLocation = agent.getLocation()
+    originalId = agent.getAgentId()
+    agent = InfectedAgent()
+    agent.setAgentId(originalId)
+    agent.setAgentLocation(getX(originalLocation), getY(originalLocation))
+    return agent
+
+
+#main function that runs the simulation
 def main():
     rows = columns = 10                                                                         #sets the rows and columns
-    numberOfAgents = 5                                                                          #sets number of agents in the grid
+    numberOfAgents = 15                                                                          #sets number of agents in the grid
     matrix = createMatrix(rows, columns)                                                        #creates the grid
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
     agentList = []
     print()
-#    print("This is where the agents are initially located")
-    print()
-    for x in range(len(agentIDList)):                                                           #go through agent id's and create agents
+    for x in range(len(agentIDList)):                                                                          #go through list of ids and create a susceptible agent for each id and add it to list
         agentList.append(SusceptibleAgent())
-        agentList[x].setAgentId(agentIDList[x])                                                 #set id of agent to the agent id from list
-        agentList[x].setAgentLocation(generateRandomX(rows), generateRandomY(columns))          #set the location of each agent randomly'
+        agentList[x].setAgentId(agentIDList[x])                                                #set id of agent to the agent id from list
+        agentList[x].setAgentLocation(generateRandomX(rows), generateRandomY(columns))          #set the location of each agent randomly
+        #print the location of each agent's initial location
         print(agentList[x].getAgentId() + " is at location " + "(" + str(getX(agentList[x].getLocation())) + ", " + str(getY(agentList[x].getLocation())) + ")")
     print()
+    #go through and add each agent to the matrix
     for x in range(len(agentList)):
         matrix = addAgentsToMatrix(matrix, agentList[x])
     displayGrid(matrix, agentList)                                                                          #prints the matrix with agents on the matrix
     print()
 
-    for i in range(10):                                                                          #This is the loop that would simulate agents moving
+        #randomly generate a sick agent to be patient zero from the list of agents
+        #make them an infected agent and put them in the agent list
+    sickAgentIndex = random.randint(0, len(agentList) - 1)
+    agentList[sickAgentIndex] = createInfectedAgent(agentList[sickAgentIndex])
+    print("The sick agent is " + agentList[sickAgentIndex].getAgentId())
+    for i in range(30):                                                                          #This is the loop that would simulate agents moving on the grid
         print("This is the location of agents after " + str(i+1) + " iteration")
         print()
-        direction = whichWayToMove()
-        agentList = setNewLocations(direction, agentList, rows, columns)
+        #get a direction that each agent will move (each agent moves in a random direction, independent of the other agents.
+        for x in range(len(agentList)):
+            direction = whichWayToMove()
+                #go through the list of agents and set their location to the new direction
+            agentList[x] = setNewLocations(direction, agentList[x], rows, columns)
         print()
+            #go thorugh the list of agents and print their new location
         for x in range(len(agentList)):
             print("Agent " + agentList[x].getAgentId() + " is at: ", end=" ")                       #prints the agent id and their location
             print(agentList[x].getLocation())
         print()
         matrix = createMatrix(rows, columns)                                                    #reinitialize the grid (a.k.a clear the matrix)
         for x in range(len(agentList)):
-            matrix = addAgentsToMatrix(matrix, agentList[x])                                           #add agents new positions to the grid
+            matrix = addAgentsToMatrix(matrix, agentList[x])                                           #add agents with new positions to the grid
         displayGrid(matrix, agentList)                                                                     #print new grid
+            #go through agent list and check for collisions
+        listOfCollisions = locationSame(agentList)
+            #if there were any collision, do this
+        if(len(listOfCollisions) != 0):
+                #go through list of collisions and see if either agent that collided was infected
+            for x in range(len(listOfCollisions)):
+                    #checks if an agent in the collision was infected
+                agent = whichAgentisInfected(listOfCollisions[x][0], listOfCollisions[x][1])
+                    #if no agent infected, continue through collision list
+                if (agent == "none"): continue
+                #if the first agent was sick and second was not (a.ka. susceptible) then make the second agent in the collision infected
+                if (agent == "agent1" and not isSick(listOfCollisions[x][1])):
+                    #go through the list of agents and figure out which agent in the list is infected and make that agent infected
+                    for y in range(len(agentList)):
+                        if (listOfCollisions[x][1].getAgentId() == agentList[y].getAgentId()):
+                            agentList[y] = createInfectedAgent(agentList[y])
+                #if the second agent was sick and first was not (a.ka. susceptible) then make the first agent in the collision infected
+                elif (agent == "agent2" and not isSick(listOfCollisions[x][0])):
+                    #go through the list of agents and figure out which agent in the list is infected and make that agent infected
+                    for y in range(len(agentList)):
+                        if (listOfCollisions[x][0].getAgentId() == agentList[y].getAgentId()):
+                            agentList[y] = createInfectedAgent(agentList[y])
         print()
-        time.sleep(1)
-
-#    agent = whichAgentisInfected(agent1, agent2)
-#    if (agent == "agent2"):
-#        agent2 = InfectedAgent()
-#    print(agent2.getHealth())
+            #sleep for 2 seconds so you can see each iteration progress. Lower this to speed up the iterations or increase this to slow down th iterations
+        time.sleep(2)
 
 
-
+#object definitions
 class agent(object):
     def __init__(self,params=None):
         self.id = params
