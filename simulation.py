@@ -191,7 +191,7 @@ def createInfectedAgent(agent):
 
 #main function that runs the simulation
 def runSimulation():
-    rows = input("Enter the size of your matrix: ")
+    rows = input("Enter the size of your matrix (please enter # rows you want): ")
     rows = int(rows)
     columns = rows
         #sets the rows and columns
