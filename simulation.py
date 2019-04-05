@@ -190,9 +190,19 @@ def createInfectedAgent(agent):
 
 
 #main function that runs the simulation
-def main():
-    rows = columns = 10                                                                         #sets the rows and columns
-    numberOfAgents = 15                                                                          #sets number of agents in the grid
+def runSimulation():
+    rows = input("Enter the size of your matrix: ")
+    rows = int(rows)
+    columns = rows
+        #sets the rows and columns
+    numberOfAgents = input("Enter the number of agents on the board: ")
+    numberOfAgents = int(numberOfAgents)
+    while(numberOfAgents >= columns*rows):
+        numberOfAgents = input("You are putting too many agents on the board. Try Again: ")
+        numberOfAgents = int(numberOfAgents)
+        #sets number of agents in the grid
+    iterations = input("How many iterations should this simulation run: ")
+    iterations = int(iterations)
     matrix = createMatrix(rows, columns)                                                        #creates the grid
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
     agentList = []
@@ -215,7 +225,7 @@ def main():
     sickAgentIndex = random.randint(0, len(agentList) - 1)
     agentList[sickAgentIndex] = createInfectedAgent(agentList[sickAgentIndex])
     print("The sick agent is " + agentList[sickAgentIndex].getAgentId())
-    for i in range(30):                                                                          #This is the loop that would simulate agents moving on the grid
+    for i in range(iterations):                                                                          #This is the loop that would simulate agents moving on the grid
         print("This is the location of agents after " + str(i+1) + " iteration")
         print()
         #get a direction that each agent will move (each agent moves in a random direction, independent of the other agents.
@@ -258,6 +268,17 @@ def main():
         print()
             #sleep for 2 seconds so you can see each iteration progress. Lower this to speed up the iterations or increase this to slow down th iterations
         time.sleep(2)
+    print("--Simulation Terminated--")
+    print()
+
+#Help section
+def help():
+    selection = " "
+    while(selection != "q"):
+        selection = input("Welcome to the COMP4206 Epidemic Simulator, developed by Ravi Gupta and Shruti Bahl. In this simulator, you can view the spread of infections in an NxN matrix. When you select the run option (2), you will be allowed to enter in the size of the matrix, the number of agents to display, and how many steps the agents should make. The matrix will display and then an agent will be randomly infected. You will then see the matrix after each iteration  so you can track their progress. Press q to return to the menu: ")
+    print()
+
+
 
 
 #object definitions
@@ -298,5 +319,21 @@ class RemovedAgent(agent):
         super().__init__()
         self.health = "removed"
 
+#menu
+def main():
+    selection = 0
+    while(selection != 3):
+        print("Welcome to The COMP 4206 Epidemic Simulator!")
+        print("Menu")
+        print("(1) -- Help")
+        print("(2) -- Run")
+        print("(3) -- Quit")
+        print()
+        selection = input("Choose a menu option: ")
+        selection = int(selection)
+        if (selection == 1): help()
+        if (selection == 2): runSimulation()
+        if (selection == 3): print("Goodbye!")
+        if(isinstance(selection, str)): selection = input("Not a valid option. Enter selection: ")
 
 main()
