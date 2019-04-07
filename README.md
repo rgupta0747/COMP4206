@@ -11,6 +11,6 @@ User can set how big of a square matrix (recommended size between 10x10 and 30x3
 
 User can track stats as the simulation progresses. 
 
-**NOTE: You must run this in Python3 as the code is developed in Python3. Also, to view the grid and results, you will need to enable termcolor (pip3 install termcolor). 
+**NOTE: You must be using Python3 as the code was developed, built, and tested using Python3. Also, to view the grid and results, you will need to enable termcolor (pip3 install termcolor). 
 
 Upcoming will be introducing vaccines in some agents to see how the infection is halted over time. 
