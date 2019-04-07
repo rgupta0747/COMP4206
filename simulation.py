@@ -218,6 +218,7 @@ def runSimulation():
     timeBeforeDeath = input("How many iterations should a sick agent last for before dying: ")
     if (timeBeforeDeath == "q"): return
     timeBeforeDeath = int(timeBeforeDeath)
+    nameOfDisease = input("What is the name of the disease: ")
 
     matrix = createMatrix(rows, columns)                                                        #creates the grid
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
@@ -243,6 +244,8 @@ def runSimulation():
     for x in range(len(susceptibleAgents)):
         if (x == sickAgentIndex):
             susceptibleAgents.remove(susceptibleAgents[x])
+    biggestWave = 0
+    timeOfBiggestWave = 0
     for i in range(iterations):
         counter += 1;
         #sleep for 2 seconds so you can see each iteration progress. Lower this to speed up the iterations or increase this to slow down th iterations
@@ -326,6 +329,9 @@ def runSimulation():
         for x in range(len(sickAgents)):
             if (sickAgents[x].getTimeOfSickness() < timeBeforeDeath): newSickAgents.append(sickAgents[x])
         agentList = susceptibleAgents + newSickAgents
+        if(len(newSickAgents) > biggestWave):
+            biggestWave = len(newSickAgents)
+            timeOfBiggestWave = counter
         if (len(newSickAgents) == 0):
             finishedBecauseAllSafe = True
             flag = True
@@ -364,12 +370,22 @@ def runSimulation():
     print("Number of Susceptible: \t\t\t" + str(len(susceptibleAgents)))
     print("Number of Infected: \t\t\t" + str(len(newSickAgents)))
     if (len(removedAgents) + len(newSickAgents) + len(susceptibleAgents) != numberOfAgents):
+        removed = (numberOfAgents - len(susceptibleAgents) - len(newSickAgents))
         print("Number of Removed : \t\t\t" + str(numberOfAgents - len(susceptibleAgents) - len(newSickAgents)))
-    else: print("Number of Removed : \t\t\t" + str(len(removedAgents)))
+    else:
+        removed = len(removedAgents)
+        print("Number of Removed : \t\t\t" + str(len(removedAgents)))
+    print()
+    if (len(susceptibleAgents) == 0): percentRemoved = 1.00
+    else: percentRemoved = removed/numberOfAgents
+    print(format(percentRemoved * 100, ',.0f') + "% of the population was killed by " + nameOfDisease)
+    print(format(100-percentRemoved*100, ',.0f') + "% of the population survived " + nameOfDisease)
+    print("At it's peak " + str(biggestWave) + " agents were infected by " + nameOfDisease + " at time " + str(timeOfBiggestWave))
     print()
     print(colored("SIMULATION TERMINATED", 'yellow'))
     print("--------------------")
     print()
+    exit = input("Press Any Key to Return to the Main Screen ")
 
 
 
