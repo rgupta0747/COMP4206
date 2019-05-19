@@ -1,8 +1,19 @@
+
+
+
 import random
 import time
+from matplotlib import pyplot as plt
 from termcolor import colored
 
-#creates a square grid that is row x col
+
+"""
+Function: createMatrix
+Parameters: # rows, # columns
+Purpose: create a 2d matrix
+Method: Creates a 2d list and fills the list with numbers from 0 to N^2
+Result: returns NxN matrix as a 2D list
+"""
 def createMatrix(row, col):
     number = 0
     matrix = [[0 for x in range(row)] for y in range(col)]
@@ -12,14 +23,25 @@ def createMatrix(row, col):
             number+=1
     return matrix
 
-#determines if the given agent is infected or not
+"""
+Function: isSick
+Parameters: agent object
+Purpose: determine if agent is sick
+Method: Checks if agent's health is infected
+Result: Boolean determining if agent is sick or not
+"""
 def isSick(agent):
     if (agent.getHealth() == "infected"):
         return True
     return False
 
-
-#determines which agent is sick and returns the agent that is sick
+"""
+Function: whichAgentisInfected
+Parameters: agent1 object, agent2 object
+Purpose: determine which agent is sick
+Method: checks if either agent is sick
+Result: A string for agent1, agent2, or neither
+"""
 def whichAgentisInfected(agent1, agent2):
     if (isSick(agent1)):
         return "agent1"
@@ -27,30 +49,67 @@ def whichAgentisInfected(agent1, agent2):
         return "agent2"
     else: return "none"
 
-#creates a list of id's for all the agents in the simulation
+"""
+Function: createAgentID
+Parameters: number of agents in simulation
+Purpose: create a list of agent ids
+Method: creates a list of agent ids where each id begins with the letter
+A and is a number
+Result: A list of containing agent id strings
+"""
 def createAgentID(size):
     agentList = []
     for x in range(size):
         agentList.append("A" + str(x))
     return agentList
 
-#create a random X location on the grid to initially place the agent
+"""
+Function: generateRandomX
+Parameters: number of rows in grid
+Purpose: generate random value
+Method: calls randint function in random library to generate random value
+Result: random value between 0 and rows-1.
+"""
 def generateRandomX(row):
     return random.randint(0,row-1)
 
-#create a random Y location on the grid to initially place the agent
+"""
+Function: generateRandomY
+Parameters: number of columns in grid
+Purpose: generate random value
+Method: calls randint function in random library to generate a random value
+Result: random value between 0 and columns-1
+"""
 def generateRandomY(col):
     return random.randint(0,col-1)
 
-#gets the x of the location
+"""
+Function: getX
+Parameters: a tuple corresponding to an (X,Y) coordinate
+Purpose: get x value
+Method: indexes the first value in the tuple
+Result: integer corresponding to x value
+"""
 def getX(location):
     return location[0]
 
-#gets y of the location
+"""
+Function: getY
+Parameters: a tuple corresponding to an (X,Y) coordinate
+Purpose: get y value
+Method: indexes the second value in the tuple
+Result: integer corresponding to y value
+"""
 def getY(location):
     return location[1]
 
-#determines the direction the agent will move
+"""
+Function: whichWayToMove
+Parameters: None
+Purpose: get a random direction to move
+Method: gets a random value between 1 and 5 to determine the direction to move
+Result: A string representing the direction the agent will move
+"""
 def whichWayToMove():
     direction = random.randint(1,5)
     if (direction == 1): return "north"
@@ -60,7 +119,15 @@ def whichWayToMove():
     if (direction == 5): return "stays"
 
 
-#generates movement of the agent from left to right on the grid based on a given direction
+"""
+Function: movesLeftRight
+Parameters: y coordinate, the direction to move, and number of columns in the grid
+Purpose: move the agent in a specific direction left or right
+Method: first checks boundary cases (if at edges) and if direction moves agent
+outside grid. If agent moves off grid, do not move agent. If boundary case not an
+issue, then move agent left or right depending on direction
+Result: y value with new location
+"""
 def movesLeftRight(y, direction, cols):
     if (y == 0 and direction == "east"):
         newYLocation = y+1
@@ -78,7 +145,15 @@ def movesLeftRight(y, direction, cols):
             newYLocation = y-1
     return newYLocation
 
-#this moves the agent up or down based on a provided direction
+"""
+Function: movesUpDown
+Parameters: x coordinate, the direction to move, and number of rows in the grid
+Purpose: move the agent in a specific direction up or down
+Method: first checks boundary cases (if at edges) and if direction moves agent
+outside the grid. If agent moves off grid, do not move agent. If boundary case is
+not an issue, then move agent up or down depending on direction.
+Result: x value with new location.
+"""
 def movesUpDown(x, direction, rows):
     if (x == 0 and direction == "south"):
         newXLocation = x+1
@@ -96,7 +171,14 @@ def movesUpDown(x, direction, rows):
             newXLocation = x-1
     return newXLocation
 
-#this adds the agent to the matrix
+"""
+Function: addAgentsToMatrix
+Parameters: matrix and the agent object
+Purpose: add an agent object to the matrix
+Method: goes through each location in the matrix and compares is to where the agent is
+supposed to be located. When it matches it adds the agent to that location in the matrix
+Result: A new matrix with an agent object added
+"""
 def addAgentsToMatrix(matrix, agent):
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
@@ -104,7 +186,18 @@ def addAgentsToMatrix(matrix, agent):
                     matrix[x][y] = agent.getAgentId()
     return matrix
 
-#checks if the two agents are at the same location and adds them to a list as a tuple
+"""
+Function: locationSame
+Parameters: list of agent objects
+Method: Goes through the list of agent objects (assuming there are at least 2) and compares
+Purpose: get a list of collisions that occur in the matrix
+each agent object's location to all other agent objects following it. If the locations are same,
+then a tuple of both agents are added to a new list.
+For example: if we have a list of agent objects [a1, a2, a3, a4], then we start with a1 and compare it's
+location to a2, a3, and a4. Then we go to a2 and compare it to a3 and a4. Then we go to a3 and compare it to
+a4. Any collisions are added to the collision list.
+Result: list containing tuples of agents that collided are returned.
+"""
 def locationSame(agents):
     sameLocation = None
     collisions = []
@@ -119,13 +212,18 @@ def locationSame(agents):
                     continue;
     return collisions
 
-#This prints out the matrix with the agents's id displayed on the matrix
-#First it determines where the collisions occur and replaces the locations
-#in the matrix that collided with !
-#Then it goes through the matrix and if their is no id at the location, prints -
-#If there is an ID, then it determines if that id is healthy or sick and prints the
-#id or id with an * if it is sick.
-#Print is done to ensure spacing is satisfied.
+"""
+Function: displayGrid
+Parameters: matrix and list of agents
+Purpose: display the matrix to the user with the agents
+Method: First we get a list of agents that collided. We then go through the list and print a "!"
+at any location a collision occured. Then we go through the matrix and at each location, check if
+an agent object resides there. If not, print a white "-". If an agent object does live there, and there
+was no collision, then we get the health of the agent. If the agent is healthy, then we print a the agent
+id as white. If the agent is infected, we print the agent id as blue and add an "*" next to the id.
+We modify the print methods so they print the results evenly and ensure the spacing is satisfied.
+Result: None
+"""
 def displayGrid(matrix, agentList):
     listOfSameLocations = locationSame(agentList)
     for x in range(len(listOfSameLocations)):
@@ -148,18 +246,40 @@ def displayGrid(matrix, agentList):
                 else: print(colored(matrix[x][y], 'yellow'), end=" ")
         print()
 
-#This checks the health of the agent ID in the agent list
+"""
+Function: getHealth
+Parameters: agent id and list of agents
+Purpose: get the health of the agent given their id
+Method: go through list of agent ids and if the id provided matches the id in the list,
+get the health of the agent object
+Result: string giving health of the agent object
+"""
 def getHealth(id, list):
     for x in range(len(list)):
         if (id == list[x].getAgentId()): return list[x].getHealth()
 
-#determines the index of the agent id in the list
+"""
+Function: locationInList
+Parameters: agent id and list of agents
+Purpose: get the index of the id in the agent list
+Method: go through list of agent ids and if the id provided matches the id in the list,
+return the index position
+Result: index position in list of agent provided
+"""
 def locationInList(id, list):
     for x in range(len(list)):
         if (id == list[x].getAgentId()): return x
 
 
-#This sets the new location of each agent in the agent list based on the direction provided
+"""
+Function: setNewLocations
+Parameters: direction to move, agent object, the number of rows, and number of columns
+Purpose: Set the location of the agent object with a new location
+Method: Get the old x and y value location of the agent object. Then using the direction,
+determine if the agent should move left right, up down, or stay in place. Then set the new x
+or new y value depending on which way the agetn moves.
+Result: return the agent object with the new location.
+"""
 def setNewLocations(direction, agent, rows, cols):
     agentLocation = agent.getLocation()
     oldX = agentLocation[0]
@@ -168,7 +288,8 @@ def setNewLocations(direction, agent, rows, cols):
     #if direction is stays don't move agent
     if (direction == "stays"):
         return agent
-    elif (direction == "east" or direction == "west"):                                    #if direction is east or west, move left/right if possible
+    #if direction is east or west, move left/right if possible
+    elif (direction == "east" or direction == "west"):
         newY = movesLeftRight(oldY, direction, cols)
         agent.setAgentLocation(oldX, newY)
     #otherwise move the agent north south
@@ -178,13 +299,19 @@ def setNewLocations(direction, agent, rows, cols):
     return agent
 
 
-#creates an infected agent
+"""
+Function: createAgent
+Parameters: current agent object, type of agent to create
+Purpose: convert an agent object to one of the given type
+Method:
+Return:
+"""
 def createAgent(agent, type):
     originalLocation = agent.getLocation()
     originalId = agent.getAgentId()
     if (type == "infected"): agent = InfectedAgent()
     if (type == "removed"): agent = RemovedAgent()
-    agent = InfectedAgent()
+    # agent = InfectedAgent()
     agent.setAgentId(originalId)
     agent.setAgentLocation(getX(originalLocation), getY(originalLocation))
     return agent
@@ -202,8 +329,8 @@ def runSimulation():
     susceptibleAgents = []
     removedAgents = []
     counter = 0
-    
-        #sets the rows and columns
+
+    #sets the rows and columns
     numberOfAgents = input("Enter the number of agents on the board: ")
     if (numberOfAgents == "q"): return
     numberOfAgents = int(numberOfAgents)
@@ -214,11 +341,14 @@ def runSimulation():
     iterations = input("How many iterations should this simulation run: ")
     if (iterations == "q"): return
     iterations = int(iterations)
-    
+
     timeBeforeDeath = input("How many iterations should a sick agent last for before dying: ")
     if (timeBeforeDeath == "q"): return
     timeBeforeDeath = int(timeBeforeDeath)
     nameOfDisease = input("What is the name of the disease: ")
+    proportionVaccinated = input("What percentage of the population is vaccinated? ")
+    proportionVaccinated = int(proportionVaccinated)
+    proportionVaccinated = float(proportionVaccinated/100)
 
     matrix = createMatrix(rows, columns)                                                        #creates the grid
     agentIDList = createAgentID(numberOfAgents)                                                 #creates a list of id's for each agent
@@ -246,6 +376,30 @@ def runSimulation():
             susceptibleAgents.remove(susceptibleAgents[x])
     biggestWave = 0
     timeOfBiggestWave = 0
+
+
+    #randomly generate 10% of the total agents and set their vaccination status to true
+    numberToVaccinate = int(proportionVaccinated * numberOfAgents)
+    for x in range(numberToVaccinate):
+        vaccinatedAgentIndex = random.randint(0, len(agentList)-1)
+        while(agentList[vaccinatedAgentIndex].getHealth() == "infected"):
+            vaccinatedAgentIndex = random.randint(0, len(agentList)-1)
+        while(agentList[vaccinatedAgentIndex].getVaccinationStatus() == True):
+            vaccinatedAgentIndex = random.randint(0, len(agentList)-1)
+        agentList[vaccinatedAgentIndex].setVaccinationStatus()
+
+    #This will store the (x,y) data collected from the simulation - x will measure time and y will
+    #measure the changing data
+    survivalDataX = []
+    survivalDataY = []
+    infectedDataX = []
+    infectedDataY = []
+    removedDataX = []
+    removedDataY  = []
+    precentDiffData = []
+    changeInInfectionX = []
+    changeInInfectionY = []
+    previousIteration = 0
     for i in range(iterations):
         counter += 1;
         #sleep for 2 seconds so you can see each iteration progress. Lower this to speed up the iterations or increase this to slow down th iterations
@@ -274,6 +428,7 @@ def runSimulation():
                 if (agent == "none"): continue
                 #if the first agent was sick and second was not (a.ka. susceptible) then make the second agent in the collision infected
                 if (agent == "agent1" and not isSick(listOfCollisions[x][1])):
+                    if (listOfCollisions[x][1].getVaccinationStatus() == True): continue
                     #go through the list of agents and figure out which agent in the list is infected and make that agent infected
                     for y in range(len(agentList)):
                         if (listOfCollisions[x][1].getAgentId() == agentList[y].getAgentId()):
@@ -281,6 +436,7 @@ def runSimulation():
                 #if the second agent was sick and first was not (a.ka. susceptible) then make the first agent in the collision infected
                 elif (agent == "agent2" and not isSick(listOfCollisions[x][0])):
                     #go through the list of agents and figure out which agent in the list is infected and make that agent infected
+                    if (listOfCollisions[x][0].getVaccinationStatus() == True): continue
                     for y in range(len(agentList)):
                         if (listOfCollisions[x][0].getAgentId() == agentList[y].getAgentId()):
                             agentList[y] = createAgent(agentList[y], "infected")
@@ -343,13 +499,27 @@ def runSimulation():
         print("The number of Susceptible Agents is : " + str(len(susceptibleAgents)))
         print("The number of Infected Agents is : " + str(len(newSickAgents)))
         if (len(removedAgents) + len(newSickAgents) + len(susceptibleAgents) != numberOfAgents):
+            numberOfRemovedAgents = numberOfAgents - len(susceptibleAgents) - len(newSickAgents)
             print("The number of Removed Agents is : " + str(numberOfAgents - len(susceptibleAgents) - len(newSickAgents)))
-        else: print("The number of Removed Agents is : " + str(len(removedAgents)))
-#        print("The infected agents are: ")
-#        print(colored("--------------------------------------------------------", 'red'))
-#        print("Agent ID\t\t\tTime Remaining before Death")
-#        for x in range(len(newSickAgents)):
-#            print(newSickAgents[x].getAgentId() + "\t\t\t\t\t" + str(newSickAgents[x].getTimeOfSickness()))
+        else:
+            numberOfRemovedAgents = len(removedAgents)
+            print("The number of Removed Agents is : " + str(len(removedAgents)))
+        survivalDataX.append(counter)
+        survivalDataY.append(len(susceptibleAgents))
+        infectedDataX.append(counter)
+        infectedDataY.append(len(newSickAgents))
+        removedDataX.append(counter)
+        removedDataY.append(numberOfRemovedAgents)
+        changeInInfectionX.append(counter)
+        if (counter == 1): changeInInfectionY.append(len(newSickAgents))
+        else:
+            if (previousIteration == len(newSickAgents)):
+                valueToAppend = len(changeInInfectionY) - 1
+                changeInInfectionY.append(changeInInfectionY[valueToAppend])
+            else:
+                changeInInfectionY.append(len(newSickAgents)/previousIteration)
+
+        previousIteration = len(newSickAgents)
     print()
     print()
     if (finishedBecauseAllDead):
@@ -377,14 +547,48 @@ def runSimulation():
         print("Number of Removed : \t\t\t" + str(len(removedAgents)))
     print()
     if (len(susceptibleAgents) == 0): percentRemoved = 1.00
-    else: percentRemoved = removed/numberOfAgents
+    else: percentRemoved = (removed+(len(newSickAgents)))/numberOfAgents
+    percentSurvived = len(susceptibleAgents)/numberOfAgents
     print(format(percentRemoved * 100, ',.0f') + "% of the population was killed by " + nameOfDisease)
-    print(format(100-percentRemoved*100, ',.0f') + "% of the population survived " + nameOfDisease)
+    print(format(percentSurvived*100, ',.0f') + "% of the population survived " + nameOfDisease)
     print("At it's peak " + str(biggestWave) + " agents were infected by " + nameOfDisease + " at time " + str(timeOfBiggestWave))
+    averageRate = 0
+    for x in range(len(changeInInfectionY)):
+        averageRate += changeInInfectionY[x]
+    averageRate = averageRate/len(changeInInfectionY)
+    print("The Average rate of infection is : " + str(averageRate))
     print()
     print(colored("SIMULATION TERMINATED", 'yellow'))
     print("--------------------")
     print()
+    plt.plot(survivalDataX, survivalDataY)
+    plt.xlabel("Time(t)")
+    plt.ylabel("# Susceptible Agents")
+    plt.title("Change in Susceptible Population after introduction of " + nameOfDisease )
+    plt.axis([0, counter, 0, numberOfAgents])
+    plt.show()
+    plt.plot(infectedDataX, infectedDataY)
+    plt.xlabel("Time(t)")
+    plt.ylabel("# Infected Agents")
+    plt.title("Change in Infected Population after introduction of " + nameOfDisease)
+    plt.axis([0, counter, 0, numberOfAgents])
+    plt.show()
+    plt.plot(removedDataX, removedDataY)
+    plt.xlabel("Time(t)")
+    plt.ylabel("# Removed Agents")
+    plt.title("Change in Removed Population after introduction of " + nameOfDisease)
+    plt.axis([0, counter, 0, numberOfAgents])
+    plt.show()
+    plt.plot(changeInInfectionX, changeInInfectionY)
+    plt.xlabel("Time(t)")
+    plt.ylabel("R0")
+    plt.title("Change in infection rate over time for " + nameOfDisease)
+    maxRate = 0;
+    for x in range(len(changeInInfectionY)):
+        if (changeInInfectionY[x] > maxRate): maxRate = changeInInfectionY[x]
+    plt.axis([0, counter, 0, maxRate])
+    plt.show()
+
     exit = input("Press Any Key to Return to the Main Screen ")
 
 
@@ -406,6 +610,7 @@ class agent(object):
         self.location =  (0, 0)
         self.health = None
         self.timeOfSickness = 0
+        self.vaccination = False
     def setAgentLocation(self, x, y):
         locationx = x
         locationy = y
@@ -425,6 +630,10 @@ class agent(object):
         self.timeOfSickness += 1
     def getTimeOfSickness(self):
         return self.timeOfSickness
+    def setVaccinationStatus(self):
+        self.vaccination = True
+    def getVaccinationStatus(self):
+        return self.vaccination
 
 class SusceptibleAgent(agent):
     def __init__(self,params=None):
@@ -454,10 +663,11 @@ def main():
         print("(3) -- Quit")
         print()
         selection = input("Choose a menu option: ")
+        while (selection == "q" or selection == "Q"):
+            selection = input("Invalid entry. Try again: ")
         selection = int(selection)
         if (selection == 1): help()
         if (selection == 2): runSimulation()
         if (selection == 3): print("Goodbye!")
-        if(isinstance(selection, str)): selection = input("Not a valid option. Enter selection: ")
 
 main()
